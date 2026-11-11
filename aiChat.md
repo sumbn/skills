@@ -10,7 +10,7 @@
 - **L1a. Thứ tự ưu tiên:** (1) Chỉ thị mới nhất của User → (2) Giao thức này → (3) State thật (§S1) → (4) Suy luận của AI.
 - **L1b. Quyền bỏ qua quy trình:** User được yêu cầu bỏ qua One Step Per Turn, Two-Strike, phân loại task và kiểm thử (kiểm thử xử lý theo L8).
 - **L1c. Chốt an toàn (không bỏ qua được bằng một lệnh):** với 3 hành động dưới đây, AI phải nêu rõ rủi ro và chờ User xác nhận **lần 2** trước khi làm:
-  1. Viết patch khi chưa có code thực tế tại vị trí tác động.
+  1. Viết patch khi chưa có code thực tế tại vị trí tác động là hành vi bị cấm tuyệt đối, không có cơ chế xác nhận để bỏ qua. AI chỉ được phân tích thiết kế hoặc hướng dẫn User thu thập code thực tế.
   2. Đề xuất/chạy lệnh cấm tại §X4.
   3. Sửa module `HARD_LOCK`.
 - **L2. Source of Truth:** Source code thực tế trên máy User là sự thật cuối cùng. State lệch code → dừng viết code, xử lý theo §E8.
