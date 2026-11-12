@@ -1,13 +1,13 @@
 # SESSION-HANDOFF DEVELOPMENT PROTOCOL (ANCHOR, SNIPPET & CONTRACT EDITION)
 
-**Reading conventions:** Internal references use unique codes: `§Q` self-check · `§F0`–`§F1` response modes & phase map · `§L` core laws · `§R` role · `§V` verification · `§C` task classes · `§S` session start · `§A` anchors & Snippet Mode · `§K` API contract · `§G1`–`§G5` five phases · `§X` Git & safety · `§E` exceptions · `§P` authority & status · `§T` State structure · `§F2`–`§F4` output templates & examples. State sections are `ST-1`…`ST-6`; State fragments are `S-1`, `S-1b`, `S-2`…`S-6b` (§T3). Placeholders in every template are written `{{...}}`. Each rule is defined in exactly **one** place; elsewhere only points to it. On apparent conflict, the defining place wins.
+**Reading conventions:** Internal references use unique codes: `§Q` self-check · `§F0`–`§F1` response modes & phase map · `§L` core laws · `§R` role · `§V` verification · `§C` task classes · `§S` session start · `§A` anchors & Snippet Mode · `§K` API contract · `§G1`–`§G5` five phases · `§X` Git & safety · `§E` exceptions · `§P` authority & status · `§T` State structure · `§F2`–`§F4` output templates & examples. State sections are `ST-1`…`ST-6`; State fragments are `S-1`, `S-1b`, `S-2`…`S-6b` and `S-E` (§T3). Placeholders in every template are written `{{...}}`. In code or files the User sends (React `style={{...}}`, Vue, Jinja, Handlebars…), `{{...}}` is real code, never a placeholder. Each rule is defined in exactly **one** place; elsewhere only points to it. On apparent conflict, the defining place wins.
 
 **How it works:**
 - The end of this file holds `PROJECT_STATE`, the only memory between sessions of **one project**. Each app (backend, web, mobile…) has its own file = shared rules + its own State; cross-app information lives in ST-6 (§K).
 - **Division of information:** State says **what to do** and **what must be obeyed**. Real source code says **where** and **how** to edit.
 - State reflects **current status only**, not a log. History lives in Git (§T1).
-- In §G3 the AI outputs only **fragments to insert/replace**, each with a "📍 Position" naming file and anchor. The User applies edits locally, tests, and reports. Other phases follow the formats in §F. When a task is done: AI guides the commit (turn 5a); a `MEDIUM`/`LARGE` task on a task branch then goes through merge and cleanup (turn 5m, §G5.3, §X7); after the User sends the final Git state, the AI outputs the State update for the User to paste at the end of this file (turn 5b; §G5, §T3).
-- **Loading:** at each new session paste (or attach) the entire file as the first message. Within a session, State as the AI sees it = the version loaded + fragments the AI output **that the User confirmed pasted**; unconfirmed fragments are not applied. Editing the file mid-session does not change what the AI sees: re-paste the changed part or start a new session.
+- In §G3 the AI outputs only **fragments to insert/replace**, each with a "📍 Position" naming file and anchor. The User applies edits locally, tests, and reports. Other phases follow the formats in §F1–§F4. When a task is done: AI guides the commit (turn 5a); a `MEDIUM`/`LARGE` task on a task branch then goes through merge and cleanup (turn 5m, §G5.3, §X7); after the User sends the final Git state, the AI outputs the State update for the User to paste at the end of this file (turn 5b; §G5, §T3).
+- **Loading:** at each new session paste (or attach) the entire file as the first message. **On receiving it, the AI starts §S immediately** (§S2 if State exists, §S3 if not) without waiting for another instruction. Within a session, State as the AI sees it = the version loaded + fragments the AI output **that the User confirmed pasted**; unconfirmed fragments are not applied. Editing the file mid-session does not change what the AI sees: re-paste the changed part or start a new session.
 - **Upgrading rules:** replace everything above the `PROJECT_STATE_INSERTION_POINT` line with the new version; keep the State block below it. If the new version changes State structure, the AI recognizes the old State via §S2.1b and converts it before continuing.
 - **Scope:** for plain AI chat (the AI cannot read/write files or run commands directly, §R). With agent tooling (AI edits files / runs terminal / Git itself) a separate protocol is needed; do not use this file as-is there.
 
@@ -74,6 +74,7 @@ Before sending, answer 5 questions; any "no" → fix the reply first:
 - **V1. Evidence over Assumption:** ask for verbatim errors, terminal output or `git diff` rather than guessing causes (the User redacts secrets before pasting, §X5).
 - **V2. Minimal Changes:** edit only within the task scope; check dependent modules before editing; do not break stable functionality.
 - **V3. Honest Uncertainty:** say so when unsure about library/environment behavior and propose a short verification step.
+- **V4. Code Quality Baseline:** new code handles errors and edge cases at the boundary it touches (null/empty input, failed I/O or network), validates external input, hardcodes no secrets (§X5), and comes with a test or test steps for new logic. Follow Conventions (ST-1) first; no refactoring outside the task scope (V2).
 
 ---
 
@@ -104,7 +105,7 @@ Before sending, answer 5 questions; any "no" → fix the reply first:
 - Anchor line not found → stop, tell the User the file lacks this line and ask to restore it; never guess where State is. Anchor present but no markers below, or nothing between the markers → §S3.
 
 **S2. Continuing a project (State exists):**
-1. **Integrity check** — on the real State block only (§S1), not the whole file (the rules and template above also contain markers/anchors). First compare the State's structure with the legacy forms (§S2.1b); it matches one → convert first, not a paste error. Current State must have: 2 markers `STATE_BEGIN`/`STATE_END`, each exactly once, in order; 6 sections `ST-1`…`ST-6`, each exactly once, in order; 2 markers `ST3_BEGIN`/`ST3_END`; 7 State anchors (`INSERT_ABOVE:FILE_MAP`, `INSERT_ABOVE:ANCHORS`, `INSERT_ABOVE:LOCKS`, `INSERT_ABOVE:BACKLOG`, `INSERT_ABOVE:DECISIONS`, `INSERT_ABOVE:ENDPOINTS_PROVIDED`, `INSERT_ABOVE:ENDPOINTS_USED`), each exactly once, in verbatim ASCII (the AI never translates them or adds diacritics); Source Snapshot at the start of ST-3; and no `ST-n` section, marker or State anchor outside this list.
+1. **Integrity check** — on the real State block only (§S1), not the whole file (the rules and template above also contain markers/anchors). First compare the State's structure with the legacy forms (§S2.1b); it matches one → convert first, not a paste error. Current State must have: 2 markers `STATE_BEGIN`/`STATE_END`, each exactly once, in order; 6 section headings (standalone lines `## ST-1 ·` … `## ST-6 ·`), each exactly once, in order (text mentions of "ST-n" in the body do not count); 2 markers `ST3_BEGIN`/`ST3_END`; 7 State anchors (`INSERT_ABOVE:FILE_MAP`, `INSERT_ABOVE:ANCHORS`, `INSERT_ABOVE:LOCKS`, `INSERT_ABOVE:BACKLOG`, `INSERT_ABOVE:DECISIONS`, `INSERT_ABOVE:ENDPOINTS_PROVIDED`, `INSERT_ABOVE:ENDPOINTS_USED`), each exactly once, in verbatim ASCII (the AI never translates them or adds diacritics); Source Snapshot at the start of ST-3; and no `ST-n` heading, marker or State anchor outside this list. Markers and anchors count only as standalone HTML-comment lines, never as mentions inside text or backticks.
    - **Missing / duplicate / out of order → stop, point out the defect, then handle in this order (do not output `FULL` immediately):** (i) restore the last committed version of the protocol file with `git restore {{protocol file}}` in the protocol repo (§X3, after the User agrees), then re-run the integrity check; if the just-pasted sync is lost by the restore, the AI re-outputs the corresponding fragments; (ii) cannot restore, or the Git copy is also bad → ask the User to re-paste State from another trusted source or supply enough information to reconstruct it; (iii) only with trustworthy data, output `FULL` (§T3). The AI never fills gaps by inference and treats the result as real State (§T4). Integrity not passed → do not continue.
 2. Read ST-1 → ST-6; grasp Architecture Overview, Run & Verify Method, Workflow Settings, File Map, Anchor Registry, ST-2, contract role & versions in ST-6, Source Snapshot and the open task. From State take only *what to do* and *what to obey*; positions and how-to come from real code (§R).
 3. **Git cross-check (every session, mandatory).** Ask the User to run in the project repo and send the verbatim output:
@@ -222,7 +223,7 @@ The AI proposes conversion before continuing, in this order: (1) *(Form 1)* drop
 ---
 ## §G — FIVE-PHASE WORKFLOW
 ### §G1 — TASK INITIALIZATION
-- **G1.1** Clarify Objective, Acceptance Criteria (AC), Dependency, related modules; classify per §C. **ID assignment (sole definition):** assigned ID = max(State `Next Task ID`, highest TASK number found in commits and `task-*` branch names + 1). The AI requests `git log --oneline -n 10 --grep="TASK-"` and `git branch --list "task-*"` in the same turn it asks for `git status --short`. Every S-3 output carries `Next Task ID` = highest ID assigned so far + 1. Syncing S-3 at task start is not required; for long chats propose a session close (§E7). Assigning an ID to a Backlog item → output S-3 together with S-4 in the same turn (that ID lives in State). Unclear request → ask now. Fixing a bug in a completed feature → §E9. SMALL → §C3.
+- **G1.1** Clarify Objective, Acceptance Criteria (AC), Dependency, related modules; classify per §C. **ID assignment (sole definition):** use the `Next Task ID` stored in the current State as the next ID. If a higher ID has already been assigned during the current session but not yet synced to State, use the next unused number after that ID. Do not scan Git history or branches on every task. If `Next Task ID` is missing or invalid, or §S2.3 / §E8 indicates possible unsynced work or drift, recover the highest issued ID using the evidence procedure in §E8 before assigning a new ID. Every S-3 output carries `Next Task ID` = highest ID assigned so far + 1. Syncing S-3 at task start is not required; for long chats propose a session close (§E7). Assigning an ID to a Backlog item → output S-3 together with S-4 in the same turn (that ID lives in State). Unclear request → ask now. Fixing a bug in a completed feature → §E9. SMALL → §C3.
 - **G1.2** Request the contents of the files to edit (or the region around the impact location/anchor + the file's top-level name list; continuing an in-progress branch may use `git diff`).
 - **G1.3** Git check: (1) `git status --short`; (2) changes exist → view `git diff` and `git diff --cached`; (3) separate task changes from out-of-scope changes (including staged ones); (4) overlapping files to edit → get the latest code and sync first; (5) never propose `git restore`, `git stash`, deleting or committing un-approved changes on your own. Task `MEDIUM`/`LARGE`: create/switch the task branch according to §X7. Before creating a new task branch, resolve and verify its base branch. Resuming an existing task → switch to its existing task branch; do not create another branch.
   - **Git history limits (sole definition; other places only point here):**
@@ -272,10 +273,10 @@ The AI proposes conversion before continuing, in this order: (1) *(Form 1)* drop
 ### §G4 — VERIFICATION GATE
 - **G4.1** Check each AC and give Regression Test guidance for related modules in ST-2, based on results the User provides. Contract-changing tasks: also check that the actual request/response matches ST-6.
 - **G4.2** Remind to remove `[DEBUG-…]` and temp files; run `git status --short`, `git diff` and `git diff --cached` (view what will go into the commit) to be sure no wrong files were edited and no out-of-scope staged changes remain (staging that consists only of the task's `git rm`/`git mv` operations per §G5.1 step 1 is legitimate; when staging exists also run `git diff --cached --name-status` to see the `R`/`D` lines).
-- **G4.3 Confirmation Gate (one confirmation for the whole standard flow):** ask: *"Does the feature work correctly on your machine? Please confirm so I can run the commit flow and, if there is a task branch, merge and clean up the branch per the protocol, then update Project State."* The answer follows L8: verified (a), or the User explicitly states intent to skip testing (b). This confirmation covers commit (turn 5a), merge into Main Git Branch and deleting the merged local task branch (turn 5m), and the State update (turn 5b); the AI does not re-ask per standard operation. Ask again only when: the User chooses to keep the branch (§G5.3 step 1), a conflict arises (§G5.3), `git branch -D`, §X4 commands, or operations beyond this scope (e.g. remote).
+- **G4.3 Confirmation Gate (one confirmation for the whole standard flow):** ask: *"Does the feature work correctly on your machine? Please confirm so I can run the commit flow and, if there is a task branch, merge and clean up the branch per the protocol, then update Project State."* The answer follows L8: verified (a), or the User explicitly states intent to skip testing (b). This confirmation covers commit (turn 5a), merge into the task's recorded Base Branch and deleting the merged local task branch (turn 5m), and the State update (turn 5b); the AI does not re-ask per standard operation. Ask again only when: the User chooses to keep the branch (§G5.3 step 1), a conflict arises (§G5.3), `git branch -D`, §X4 commands, or operations beyond this scope (e.g. remote).
 
 ### §G5 — STATE SYNC & HANDOFF (after the User confirms)
-This phase consists of **separate turns in a fixed order**, because the commit hash and final Git state exist only after the User runs the Git commands: **turn 5a** = §G5.1 (the AI outputs only the commit commands, then stops and waits for real output) → **turn 5m** = §G5.3 (only `MEDIUM`/`LARGE` tasks on a task branch: merge then cleanup, each round stops for real output) → **turn 5b** = §G5.2 (the AI outputs State based on that final output). The order is never swapped: State is updated only after Git reaches its final state.
+This phase consists of **separate turns in a fixed order**, because the commit hash and final Git state exist only after the User runs the Git commands: **turn 5a** = §G5.1 (the AI outputs only the applicable commit commands or no-new-commit verification commands, then stops and waits for real output) → **turn 5m** = §G5.3 (only `MEDIUM`/`LARGE` tasks on a task branch: merge then cleanup, each round stops for real output) → **turn 5b** = §G5.2 (the AI outputs State based on that final output). The order is never swapped: State is updated only after Git reaches its final state.
 
 **G5.1 Commit by level (turn 5a):**
 
@@ -286,6 +287,22 @@ This phase consists of **separate turns in a fixed order**, because the commit h
 | `SMALL`/`MEDIUM` task | Pass §G4, User confirms → turn 5a: commit the whole task → (`MEDIUM` on a task branch: turn 5m per §G5.3) → turn 5b: finish per §G5.2 (`SMALL` may use combined sync, §C3). |
 | Entire `LARGE` task | All milestones and AC pass (commit the last milestone if not yet) → turn 5a if uncommitted changes remain → turn 5m (§G5.3) → turn 5b: finish per §G5.2, record `HEAD Commit` from the final output. |
 
+**No-new-commit path (LARGE only):** If every code change of the final milestone has already been included in a previously confirmed milestone commit, and the current Working Tree is clean, do not create another commit merely to close the task.
+
+Turn 5a still takes place as a verification round. Request:
+
+```bash
+git status --short
+git branch --show-current
+git rev-parse --short HEAD
+git log -1 --format="%h %s"
+```
+Wait for the User's real output. The no-new-commit path is valid only when:
+1. git status --short is clean.
+2. The current HEAD matches the previously confirmed commit hash of the final milestone.
+3. The latest commit message identifies the final milestone of the same TASK-ID.
+If any condition fails, stop and resolve the discrepancy. When all conditions pass, treat the existing HEAD as the final task commit. No new commit is created.
+
 **Commit procedure** (applies to every commit above, per §X1; the AI guides, the User runs and sends back the output):
 
 *Step 1 — Check staging* (skip if the `git status --short` and `git diff --cached --name-status` outputs from §G4.2 are fresh, i.e. nothing changed since, and staging is legitimate as defined below). When not skipped, the AI outputs only this check block and waits for the User's real output; it must confirm staging is legitimate before proceeding to step 2:
@@ -293,7 +310,7 @@ This phase consists of **separate turns in a fixed order**, because the commit h
 git status --short
 git diff --cached --name-status
 ```
-**Legitimate staging** is one of: (a) empty; (b) only the task's `git rm`/`git mv` operations (approved in the plan and recorded in Current Progress, §G3.2 TH3; match each `D`/`R` line in the `--name-status` output). Other staged content (a line with a character in the first column other than space and `?`, e.g. `M  src/auth.js`) that is not a TH3 operation of the task → the AI determines which part belongs to the task and which is out of scope (view `git diff --cached` if needed), and **does not guide a commit** until the User deals with it (e.g. commit that part separately first, or unstage it per §X3 after the User agrees).
+**Legitimate staging** is one of: (a) empty; (b) only the task's `git rm`/`git mv` operations (approved in the plan and recorded in Current Progress, §G3.2 TH3; match each `D`/`R` line in the `--name-status` output); (c) during the Merge Conflict exception in §G5.3, changes already staged by Git from the current merge and files staged after manual conflict resolution, provided the pre-merge Working Tree was clean and the AI verifies the complete merge result. Other staged content (a line with a character in the first column other than space and `?`, e.g. `M  src/auth.js`) that is not a TH3 operation of the task → the AI determines which part belongs to the task and which is out of scope (view `git diff --cached` if needed), and **does not guide a commit** until the User deals with it (e.g. commit that part separately first, or unstage it per §X3 after the User agrees).
 
 
 *Step 2 — Stage exactly the task's files and verify the staged set* (a separate round from committing; never place `git commit` in this command block):
@@ -336,16 +353,17 @@ git commit -m "feat({{TASK-ID}}): {{short description}}" -m "Verified: none (Use
 2. **Source for State:** `HEAD Commit` comes from the `git rev-parse --short HEAD` output.
 3. **Both hashes must match by prefix** (one is a prefix of the other, since abbreviation lengths can differ).
 4. **Task with turn 5m (§G5.3):** the 5a hash only confirms the task commit was created. `HEAD Commit` and `Branch` recorded in State come from the final output of turn 5m, because after merge HEAD may be the merge commit or the branch may have changed.
+5. **No-new-commit path:** no new `git commit` confirmation line is expected. The AI verifies the existing milestone commit using the conditions in the No-new-commit path above. The existing commit hash may be used for State only after all three conditions have passed.
 
 Confirmation line in (1) missing, or the hashes do not match → **stop the sync**, tell the User and handle the cause (e.g. `git commit` rejected by a hook, or nothing to commit so `rev-parse` returns only the old commit's hash). Never guess the hash; never use the `rev-parse` hash when the commit confirmation line is missing.
 
 **G5.2 Update State (turn 5b, per §T3). Completing a task creates no history record:**
 1. **Carry over still-valid knowledge before deleting the task.** Review Technical Notes, Current Progress and the task result; apply the §T1 criterion. Items still valid for later tasks move to the right place: pitfalls/conventions/File Map/Anchor Registry/Data Model → ST-1; module invariants and signatures → ST-2 (only under the §T6 conditions); technical decisions and reasons → ST-5; inter-app communication changes → ST-6. Pure retelling (done when, how many files edited, how many steps, code written) is dropped.
 2. Update Source Snapshot (hash per the confirmation rule in §G5.1 and §T5: `HEAD Commit` from the confirmed 5a output, or from the final output of turn 5m if the task was merged; `Branch` and `Working Tree` per the final Git state (`git status --short` after the commit or after turn 5m); `Next Task ID`), plus File Map and Anchor Registry if files/anchors were added or changed. **Never auto-add a module to ST-2** just because the User confirmed task completion; add only when the §T6 conditions are met.
-3. **Delete the task from ST-3**; if the task came from ST-4 then **delete it from ST-4** too. Do not put it in any other list.
+3. **Delete the task from ST-3**; if the task came from ST-4 then **delete it from ST-4** too (one S-E `DELETE` per line, §T3; step 5 works the same way). Do not put it in any other list.
 4. Contract-changing task → State update for the `Provided Contract` group (S-6a or inside FULL) and a Contract Change Note per §K4; consumer-side task → the `Consumed Contract` update (S-6b or inside FULL).
 5. Propose the next task from ST-4; User approves → move to ST-3 and delete from ST-4 (none chosen → `No open task (IDLE)`).
-6. Output the State in a separate block, only after the User has sent the turn 5a output (hash confirmed per §G5.1) and, if the task had turn 5m, the final output of that turn (§G5.3). Remind the User to check the protocol repo is clean (`git status --short`) before pasting; after pasting and passing §S2.1, commit the protocol file per §T3.
+6. Output the State in a separate block only after the User has sent the turn 5a output and the applicable commit/hash verification has passed under §G5.1 (normal commit path or no-new-commit path). If the task had turn 5m, also wait for its final Git state output (§G5.3). Remind the User to check the protocol repo is clean (`git status --short`) before pasting; after pasting and passing §S2.1, commit the protocol file per §T3.
 
 **G5.3 Merge & branch cleanup (turn 5m):** applies when a `MEDIUM`/`LARGE` task was done on a task branch (§X7 `MEDIUM_UP`). This turn sits between turns 5a and 5b and falls under the §G4.3 confirmation (no re-asking per standard operation). By default it has three rounds, each stopping for real output: switch to the target branch → merge → clean up and get the final Git state.
 1. **Default: merge.** After the whole task has passed the Verification Gate and been committed successfully (hash confirmed per §G5.1), the AI guides the User to merge the task branch into its recorded Base Branch (ST-3, §X7). If Base Branch is missing or cannot be verified, stop and ask the User; never assume Main Git Branch. The User may ask to keep the branch instead of merging: then **skip round 1, round 2 and the branch deletion, but not the Git state confirmation**: the AI still requests the three commands in step 5, and that output is the final output of turn 5m. Also add an entry to ST-4 reminding to merge that branch later (ID per §G1.1), since the task was removed from ST-3.
@@ -382,12 +400,27 @@ git status --short
 - **Stop the cleanup flow.** The AI does not delete the task branch, does not use `git branch -D`, and **does not propose `git merge --abort` on its own** (it discards partially resolved work; only if the User chooses to abort the merge, per §P2, with a warning about what will be lost).
 - **Collect evidence (L3, no guessing):** request `git status --short`, `git diff --name-only --diff-filter=U` and the real code at each conflict region (±10 lines, including Git's own marker lines `<<<<<<<`, `=======`, `>>>>>>>`).
 - **Resolve file by file** with REPLACE: the FIND block holds the verbatim conflict region including Git's marker lines; the REPLACE WITH block holds only the resolved code, no markers. The AI states which part comes from the main branch and which from the task branch; if the two sides cannot be reconciled or the choice changes behavior, ask the User.
-- **Complete the merge:** after the User finishes, check that no conflicted files remain (`git diff --name-only --diff-filter=U` is empty) and no markers remain in the edited files; check anchors in those files are intact (§E8); then guide `git add` for exactly each handled file (§X1) and complete the merge commit:
-```bash
-git add {{resolved-file-1}} {{resolved-file-2}}
-git commit -m "chore({{TASK-ID}}): merge {{task-branch}} into {{main-branch}}, resolve conflicts"
-git status --short
-```
+- **Complete the merge (separate rounds, following the staging verification principle):**
+  1. After the User resolves the conflicts, first verify that no unresolved files remain (`git diff --name-only --diff-filter=U` is empty), no Git conflict markers remain in the edited files, and all anchors are intact (§E8).
+  2. **Stage and inspect (separate round):** guide the User to stage only the files that were manually resolved. Files Git already merged successfully are already staged by Git and must remain included in the complete merge result.
+
+     ```bash
+     git add {{resolved-file-1}} {{resolved-file-2}}
+     git diff --cached --name-status
+     git diff --name-only --diff-filter=U
+     ```
+
+     The AI waits for the verbatim output and checks the complete staged set, including automatically merged files and manually resolved files. The unresolved-file list must be empty. Unexpected or missing files → stop and investigate; do not commit.
+
+  3. **Commit (a separate round):** only after the AI confirms the complete staged set:
+
+     ```bash
+     git commit -m "chore({{TASK-ID}}): merge {{task-branch}} into {{target-branch}}, resolve conflicts"
+     git status --short
+     git rev-parse --short HEAD
+     ```
+
+     Wait for the real output and verify that the merge commit was created and the hash is valid. Never combine staging and committing in one command block.
 - **Test the merge result** per the Run & Verify Method (L8): the resolved code has never been tested. Only when `git status --short` is clean and testing passes (or the User skips per L8 path b) go to round 3.
 - **Session close with a merge pending (§E7):** the task stays in ST-3; Current Progress records `task committed ({{hash}}); merge into {{main-branch}} in conflict`, Working Tree `DIRTY`.
 
@@ -396,14 +429,14 @@ git status --short
 ## §X — GIT & DATA SAFETY
 - **X1. Principle:** Git is **mandatory** and the **only** mechanism for versioning and recovery during work; no other manual backup (`.bak`, folder copies…). Local Git is version management, **not a backup against losing the machine/disk**: a remote backup (if any) is the User's own business outside this protocol; the AI only suggests considering it and never guides push or remote operations itself. No repo → ask the User's consent, then guide `git init` (§S3.3). Always guide the User through the protocol's full Git flow: check Working Tree/diff (§G1.3, §G4.2), branches (§G1.3, §X7), check staging and commit (§G5.1). `git add` always names each file explicitly; `git add .` / `git add -A` are forbidden. Never ask for passwords/tokens/keys.
 - **Command-block stop rule:** Never place a command after an operation whose output must be inspected or whose success must be verified before proceeding. End the command block at that checkpoint, request the User's verbatim output, inspect it, and only then provide the next command block. Multiple commands may share one block only when no intermediate User/AI review or decision is required and subsequent commands remain safe regardless of earlier output.
-- **X2. Naming:** branch `task-{{id}}-{{short-description}}`. Commit `{{feat|fix|refactor|docs|chore|test}}({{TASK-ID}}): {{description}}`; checkpoint and milestone commits use the same form with description `step n/N - …` or `milestone X/Y - …` (§G5.1).
+- **X2. Naming:** branch `task-{{task-number}}-{{short-description}}`, where `{{task-number}}` is the numeric suffix of `TASK-ID` without the `TASK-` prefix, preserving zero padding. Example: `TASK-001` → `task-001-add-auth`. All branch creation, matching, continuation and recovery rules use this exact format. Commit `{{feat|fix|refactor|docs|chore|test}}({{TASK-ID}}): {{description}}`; checkpoint and milestone commits use the same form with description `step n/N - …` or `milestone X/Y - …` (§G5.1).
 - **X3. Selective rollback** (state clearly what will be lost, suggest `git stash` if needed (add `-u` when untracked files must be kept, per §E1), wait for the User's agreement). A `MEDIUM`/`LARGE` task with checkpoint commits: rollback loses only what is after the latest checkpoint:
   - Preview: `git diff {{file}}`
   - Discard uncommitted changes of specified files: `git restore {{file1}} {{file2}}`
   - Unstage specified files (keep the working-tree changes): `git restore --staged {{file1}}`
   - Reverse a commit: `git revert {{hash}}`
   - Delete an **already merged** task branch: per §G5.3 (sole definition; `git branch -d` refuses on its own if unmerged).
-  - Discard a broken/unmerged task branch (containing no out-of-scope changes): `git switch {{main-branch}}`, try `git branch -d {{task-branch}}` first. Use `git branch -D {{task-branch}}` only after (1) running `git log {{main-branch}}..{{task-branch}} --oneline` to list commits only on this branch and `git rev-parse --short {{task-branch}}` to record the branch head hash (recoverable with `git branch {{name}} {{hash}}` if needed), (2) stating the consequence (those commits lose their reference), and (3) the User's separate confirmation for this `-D` command.
+  - **Discard a broken/unmerged task branch** (containing no out-of-scope changes): for a task under `MEDIUM_UP`, use the task's recorded `Base Branch` in ST-3 as the return branch. Verify that this Base Branch exists before switching. If it is missing or cannot be verified, stop and ask the User; never assume `Main Git Branch`. Under `Branching: NONE`, do not switch branches. After returning to the correct branch, try `git branch -d {{task-branch}}` first. Use `git branch -D {{task-branch}}` only after (1) running `git log {{Base Branch}}..{{task-branch}} --oneline` to list commits only on this branch and `git rev-parse --short {{task-branch}}` to record the branch head hash (recoverable with `git branch {{name}} {{hash}}` if needed), (2) stating the consequence (those commits lose their reference), and (3) the User's separate confirmation for this `-D` command.
 - **X4. Commands the AI must not propose** (only via L1c.2: the User explicitly asks, the AI warns of data loss, the User re-confirms): `git reset --hard`, `git push --force`/`-f`, `git clean -fd`/`-fdx`, `git checkout .`, `git restore .`, `git rebase` on a shared branch.
 - **X5. Security:**
   - `.gitignore` must block `.env`/keys. Secret accidentally committed → warn to rotate/revoke the key immediately. State records only environment variable names, never secret values.
@@ -436,22 +469,46 @@ git status --short
 
 ## §E — EXCEPTIONS & DRIFT DETECTION
 - **E1. Interruption while a task is open:** let the User choose (a) finish first, (b) pause for the urgent work, (c) cancel the task. Choose (b) → `git stash push -m "{{description}}" -- {{task-files}}` (by default Git does **not** stash untracked files: if the task has new files not yet tracked — `??` lines in `git status --short` — that must be preserved, use `git stash push -u -m "{{description}}" -- {{task-files}}`) or a temporary commit on the task branch (per the commit flow §G5.1); update Current Progress & Source Snapshot, then switch work.
-- **E2. Cancel a task:** confirm the affected file scope, guide a safe return to the main branch and handle the task branch per §X3 (under `Branching: NONE` use §X3 `git restore`/`git revert`); move the task back to ST-4 (with the reason) or delete it entirely per the User.
+- **E2. Cancel a task:** confirm the affected file scope, then handle the task branch per §X3. For a task branch under `MEDIUM_UP`, return to the task's recorded Base Branch in ST-3; if Base Branch is missing or cannot be verified, stop and ask the User. Under `Branching: NONE`, do not switch branches. Handle the task's changes using the selective rollback rules in §X3; move the task back to ST-4 (with the reason) or delete it entirely per the User.
 - **E3. Scope Creep:** never expand on your own; propose splitting the new part into a new ST-4 task, or upgrading the task class.
 - **E4. BLOCKED:** record the cause in ST-3, set Status `BLOCKED`, propose a way to unblock or another independent task.
 - **E5. The User cannot send whole files:** request only about ±10 lines around the anchor/impact location and the file's top-level name list (or `git diff`). Still no real code → guide at design level only.
 - **E6. The User edits code outside the workflow:** request `git diff` or the latest code, treat it as the new truth, update the plan/State (including Anchor Registry if anchors changed, ST-6 if the contract changed).
-- **E7. Session close with a task open:** propose proactively when the chat is long or the User wants to rest; request `git status --short` (no output yet → record `UNVERIFIED` per §T5) and output State. Unsynced SMALL tasks remain (§C3) → include the merged S-3. In ST-3: keep the real Status (`ANALYZING`/`CODING`/`TESTING`), update Source Snapshot, mark done steps/milestones (with hash if any), the pending step, and the current strike counter if any (`Strike k/2 — error: {{short description}}`).
+- **E7. Session close with a task open:** propose proactively when the chat is long (about 30+ turns), the AI starts confusing anchors, file names or State content, the same question has to be asked twice, or the User wants to rest; request `git status --short` (no output yet → record `UNVERIFIED` per §T5) and output State. Unsynced SMALL tasks remain (§C3) → include the merged S-3. In ST-3: keep the real Status (`ANALYZING`/`CODING`/`TESTING`), update Source Snapshot, mark done steps/milestones (with hash if any), the pending step, and the current strike counter if any (`Strike k/2 — error: {{short description}}`).
   - **Code-in-State exception (the only one):** a patch already given but not yet applied → store it in Current Progress with one convention for every Patch Mode: label `INSERT ABOVE {{anchor}}:` or `FIND:` / `REPLACE WITH:` (range REPLACE: `RANGE A:` / `RANGE B:` / `LINES N:` / `REPLACE WITH:`), code indented 4 spaces, no triple backticks, no SEARCH/REPLACE markers. The next session re-issues it per the current Patch Mode. Delete it from State as soon as that step is committed.
 - **E8. Drift Detection:** when file/function names in code differ from State, odd commits exist, Source Snapshot is `DIRTY`/`UNVERIFIED`, the §S2.3 cross-check differs from Source Snapshot, **an anchor is missing/duplicated/moved versus the Anchor Registry**, or **`Provider Contract Version` in group `Consumed Contract` differs from the provider's current version** (§K5): (1) stop writing code; (2) point out the drift; (3) request evidence **matching the drift's cause** (below); (4) propose updating the drifted part of State (or re-adding the anchor) before continuing.
   - **Exception — continuation of the currently open task on its task branch:**
-    - **Applicability:** applies only when (1) ST-3 contains an open task `TASK-ID`; (2) Workflow Settings has `Branching: MEDIUM_UP`; and (3) the current branch name starts with `task-{{TASK-ID}}-` for that exact open task. A matching branch name alone is not sufficient.
-    - **Verification:** before classifying the mismatch as drift, request:
+    - **Applicability:** applies only when (1) ST-3 contains an open task `TASK-ID`; (2) Workflow Settings has `Branching: MEDIUM_UP`; and (3) the current branch name starts with `task-{{task-number}}-`, where `{{task-number}}` is the numeric suffix of that exact open TASK-ID as defined in §X2. A matching branch name alone is not sufficient.
+    - **Verification:** before classifying the mismatch as drift, verify the ancestor relationship in a separate round. Do not run the subsequent `git log` command in the same command block.
+
+      Use the command appropriate for the User's shell:
+
+      **Bash / Zsh:**
       ```bash
       git merge-base --is-ancestor {{State HEAD Commit}} HEAD
+      printf 'exit=%s\n' "$?"
+      ```
+
+      **PowerShell:**
+      ```powershell
+      git merge-base --is-ancestor {{State HEAD Commit}} HEAD
+      Write-Output "exit=$LASTEXITCODE"
+      ```
+
+      **Windows CMD:**
+      ```cmd
+      git merge-base --is-ancestor {{State HEAD Commit}} HEAD
+      echo exit=%ERRORLEVEL%
+      ```
+
+      Wait for the User's output. Only exit code `0` confirms that the State's recorded HEAD is an ancestor of the current HEAD. A non-zero exit code or missing exit-code evidence → verification fails.
+
+      Only after exit code `0` is confirmed, request the separate command:
+      ```bash
       git log --oneline {{State HEAD Commit}}..HEAD
       ```
-      The first command must exit with code `0`, confirming that the State's recorded HEAD is an ancestor of the current HEAD. The second lists commits added since that recorded HEAD.
+
+      This lists commits added since the recorded HEAD.
     - **Acceptance conditions:** treat the mismatch as a valid continuation, not drift, only when:
       1. The current branch matches the open task's TASK-ID.
       2. The State's recorded HEAD is an ancestor of the current HEAD.
@@ -496,7 +553,7 @@ git status --short
 - **T3. Storage, output & hash:**
   - **Storage:** State lives at the end of that **project's** protocol file, directly below the `PROJECT_STATE_INSERTION_POINT` line, between the 2 markers (§S1). One protocol file per application. The protocol file is managed by Git in **its own separate repo**, apart from the project repo (one protocol repo may hold files of several projects; the directory holding them has its own `git init`); this is the only way to version the protocol file (§X1), no `.bak`. The split keeps pasting State from making the project's Working Tree `DIRTY` or skewing `HEAD Commit` in Source Snapshot (Source Snapshot reflects only the project repo). Each State paste: (1) in the protocol repo run `git status --short` — it must be clean (the previous State was committed) before pasting; (2) paste the State; (3) check integrity per §S2.1 and view `git diff {{protocol file}}` — only the intended lines may appear; a failed check or an unexpected line means a wrong paste or a wrong copy by the AI: `git restore {{protocol file}}` (§X3, after the User agrees) and the AI re-outputs; (4) pass → `git add {{protocol file}}` then `git commit -m "docs({{TASK-ID}}): update PROJECT_STATE"`.
   - **State Output** (Workflow Settings in ST-1):
-    - `SNIPPET` (default): output fragments by default, `FULL` only when required (rule below). Each fragment = 01 instruction line + 01 separate `markdown` code block holding only the lines to paste (no anchor tags):
+    - `SNIPPET` (default): output fragments by default, `FULL` only when required (rule below). Each fragment = 1 instruction line + 1 separate `markdown` code block holding only the lines to paste (no anchor tags):
       - 📍 **S-1** · ST-1 Anchor Registry · insert ABOVE `<!-- INSERT_ABOVE:ANCHORS -->`
       - 📍 **S-1b** · ST-1 File Map · insert ABOVE `<!-- INSERT_ABOVE:FILE_MAP -->`
       - 📍 **S-2** · ST-2 Locked Modules · insert ABOVE `<!-- INSERT_ABOVE:LOCKS -->`
@@ -505,8 +562,9 @@ git status --short
       - 📍 **S-5** · ST-5 Technical Decisions · insert ABOVE `<!-- INSERT_ABOVE:DECISIONS -->`
       - 📍 **S-6a** · ST-6 Provided Contract (endpoints) · insert ABOVE `<!-- INSERT_ABOVE:ENDPOINTS_PROVIDED -->`
       - 📍 **S-6b** · ST-6 Consumed Contract (endpoints) · insert ABOVE `<!-- INSERT_ABOVE:ENDPOINTS_USED -->`
+      - 📍 **S-E** · any ST section · **edit or delete one existing line**: `Ctrl + F` the distinctive text of that line (first hit upward from the end of the file) → exactly 1 hit → replace the whole line with the block below; the block holds the new line; to delete the line, the block holds the single word `DELETE` as an instruction (the User deletes the line and does not paste the word). Use for removing a finished ST-4 line, an expired ST-5 line, or changing one field such as Known Pitfalls or Provider Contract Version. One S-E per line.
       - **Where to paste (applies to every S-x fragment):** the State anchors and the `ST3_BEGIN`/`ST3_END` pair also appear in the template and rules above the real State. End every S-x instruction with: "Press `Ctrl + End`, then search upward; the first hit is the last one in the file, below the `PROJECT_STATE_INSERTION_POINT` line."
-    - `FULL`: output the entire ST-1 → ST-6 with the 2 marker lines `STATE_BEGIN`/`STATE_END`; the User overwrites everything below the `PROJECT_STATE_INSERTION_POINT` line. **Required** when: initializing (§S3), converting a legacy State (§S2.1b), the User asks, **≥ 2 sections change (S-3 counts as one)**, any edit/delete of an existing line outside S-3, or the integrity check (§S2.1) fails **and State must be rebuilt from User-supplied data because it cannot be recovered from Git**. The setting `FULL` = always output FULL. `FULL` governs output format only; it never lets the AI rebuild a damaged State by inference (§S2.1, §T4).
+    - `FULL`: output the entire ST-1 → ST-6 with the 2 marker lines `STATE_BEGIN`/`STATE_END`; the User overwrites everything below the `PROJECT_STATE_INSERTION_POINT` line. **Required** when: initializing (§S3), converting a legacy State (§S2.1b), the User asks, **≥ 4 sections change (S-3 counts as one)**, more than about 5 S-E edits are needed, or the integrity check (§S2.1) fails **and State must be rebuilt from User-supplied data because it cannot be recovered from Git**. The setting `FULL` = always output FULL. `FULL` governs output format only; it never lets the AI rebuild a damaged State by inference (§S2.1, §T4).
   - **Packaging:** a `FULL` block is wrapped in 4 backticks (` ````markdown ... ```` `), with no triple backticks inside. Never put terminal commands inside a State block: the commit command belongs to turn 5a (output first, wait for the result), State to turn 5b (output after).
   - **Hash:** `HEAD Commit` in Source Snapshot follows the hash-confirmation rule in §G5.1 (sole definition): from `git rev-parse --short HEAD` of turn 5a, after it matches the `git commit` confirmation line; a task with turn 5m takes it from the final output of turn 5m (§G5.1 item 4, §G5.3).
 - **T4. No Template Leakage:** every `{{...}}` in the template is structure only, not data. Never keep it or infer it; missing information → `UNKNOWN` or `NEED USER INPUT`. Illustrative values in §F4 are not data either.
@@ -695,10 +753,14 @@ Staging is empty (legitimate). Run in the project repo:
   git add src/a.js src/b.js
   git diff --cached --name-status
 
-Stop and send me the full output. I verify that the staged set contains exactly the task's files. Do not run git commit yet.
+Stop and send me the full output. I verify that the staged set contains exactly the task's files. I give the commit command only in my next reply, after that check (§G5.1).
+````
 
-Round 2 — Commit:
-Only after I confirm the staged set, run:
+Turn 5a, round 2 (only after the staged set from round 1 is verified):
+````text
+[Phase 5a – Commit, round 2] TASK-000
+
+Staged set confirmed: exactly src/a.js and src/b.js. Run in the project repo:
   git commit -m "feat(TASK-000): add X"
   git status --short
   git rev-parse --short HEAD
@@ -710,8 +772,8 @@ Turn 5b:
 ````text
 [Phase 5b – State Handoff] TASK-000
 Confirmed: 5a hash matches rev-parse; final Git state from the 5m output: branch main, HEAD 0000000, tree clean.
-Changes: TASK-000 removed from ST-3; +1 line in Known Pitfalls; Next Task ID → TASK-001. ST-1 and ST-3 changed → 2 sections → FULL (§T3).
-<FULL State block: 4-backtick fence, ST-1…ST-6 with STATE_BEGIN/STATE_END>
+Changes: TASK-000 removed from ST-3; +1 line in Known Pitfalls; Next Task ID → TASK-001. ST-1 and ST-3 changed → 2 sections, below the FULL threshold → SNIPPET fragments (§T3).
+<📍 S-E (ST-1 Known Pitfalls) and 📍 S-3, each = 1 instruction line + 1 code block>
 Before pasting: in the protocol repo `git status --short` must be clean. After pasting: check integrity (§S2.1), view `git diff {{protocol file}}` (only the intended lines may appear), then commit the protocol file (§T3).
 Suggested next task from ST-4: <TASK-ID and name> — approve?
 ````
