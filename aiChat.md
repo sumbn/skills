@@ -34,7 +34,7 @@ Before sending, answer 5 questions; any "no" → fix the reply first:
 | **2 – Impact Analysis** | Affected files, risks / ST-2, Contract Impact, step/Milestone plan with operation and anchor. | Ask the User to approve the plan. |
 | **3 – Implementation** | One code step, its "📍 Positions" (INSERT/REPLACE/NEW FILE/COMMAND), test guidance. | Expected result + wait for the real result (or commit guidance for a milestone). |
 | **4 – Verification** | Check AC & Regression Tests against the User's results; remind to remove debug logs. | Confirmation Gate. |
-| **5a – Commit** | Git command block naming exact files: staging check, add, commit, record hash (§G5.1). | Ask the User to send the verbatim output (`git commit`, `git status --short`, `git rev-parse --short HEAD`); AI matches the hash per §G5.1. |
+| **5a – Commit** | Stage exact files, inspect staged set, then commit and record hash (§G5.1). | First wait for and verify staging output; only then issue commit commands. Finally collect commit output and verify hash per §G5.1. |
 | **5m – Merge & Cleanup** | Only `MEDIUM`/`LARGE` tasks on a task branch: switch to the target branch, merge, delete the merged local task branch (§G5.3); conflicts → Merge Conflict exception. | Each round waits for real output (switch → merge → cleanup); the last round requests the final Git state (branch, HEAD, Working Tree). User keeps the branch: only request the final state. |
 | **5b – State Handoff** | State update (FULL or fragments per §T3) and Contract Change Note if any, including knowledge carry-over and task deletion (§G5.2). | Remind to check the protocol repo is clean before pasting; guide pasting, committing the protocol file (§T3) and the next step. |
 
@@ -224,7 +224,7 @@ The AI proposes conversion before continuing, in this order: (1) *(Form 1)* drop
 ### §G1 — TASK INITIALIZATION
 - **G1.1** Clarify Objective, Acceptance Criteria (AC), Dependency, related modules; classify per §C. **ID assignment (sole definition):** assigned ID = max(State `Next Task ID`, highest TASK number found in commits and `task-*` branch names + 1). The AI requests `git log --oneline -n 10 --grep="TASK-"` and `git branch --list "task-*"` in the same turn it asks for `git status --short`. Every S-3 output carries `Next Task ID` = highest ID assigned so far + 1. Syncing S-3 at task start is not required; for long chats propose a session close (§E7). Assigning an ID to a Backlog item → output S-3 together with S-4 in the same turn (that ID lives in State). Unclear request → ask now. Fixing a bug in a completed feature → §E9. SMALL → §C3.
 - **G1.2** Request the contents of the files to edit (or the region around the impact location/anchor + the file's top-level name list; continuing an in-progress branch may use `git diff`).
-- **G1.3** Git check: (1) `git status --short`; (2) changes exist → view `git diff` and `git diff --cached`; (3) separate task changes from out-of-scope changes (including staged ones); (4) overlapping files to edit → get the latest code and sync first; (5) never propose `git restore`, `git stash`, deleting or committing un-approved changes on your own. Task `MEDIUM`/`LARGE`: create/switch the branch per §X7 (`git switch -c task-{{id}}-{{short-name}}`, or `git switch {{branch-name}}`).
+- **G1.3** Git check: (1) `git status --short`; (2) changes exist → view `git diff` and `git diff --cached`; (3) separate task changes from out-of-scope changes (including staged ones); (4) overlapping files to edit → get the latest code and sync first; (5) never propose `git restore`, `git stash`, deleting or committing un-approved changes on your own. Task `MEDIUM`/`LARGE`: create/switch the task branch according to §X7. Before creating a new task branch, resolve and verify its base branch. Resuming an existing task → switch to its existing task branch; do not create another branch.
   - **Git history limits (sole definition; other places only point here):**
     - Do not request Git history on every task. Only when there is grounds to trace a change's origin, handle Drift Detection (§E8), fix a bug in a completed feature (§E9), or identify a related commit.
     - Default: at most the 5–10 most recent commits via `git log --oneline -n 10`; if the file/scope is known prefer path-filtered: `git log --oneline -n 10 -- {{path}}`.
@@ -288,31 +288,50 @@ This phase consists of **separate turns in a fixed order**, because the commit h
 
 **Commit procedure** (applies to every commit above, per §X1; the AI guides, the User runs and sends back the output):
 
-*Step 1 — Check staging* (skip if the `git status --short` and `git diff --cached --name-status` outputs from §G4.2 are fresh, i.e. nothing changed since, and staging is legitimate as defined below):
+*Step 1 — Check staging* (skip if the `git status --short` and `git diff --cached --name-status` outputs from §G4.2 are fresh, i.e. nothing changed since, and staging is legitimate as defined below). When not skipped, the AI outputs only this check block and waits for the User's real output; it must confirm staging is legitimate before proceeding to step 2:
 ```bash
 git status --short
 git diff --cached --name-status
 ```
 **Legitimate staging** is one of: (a) empty; (b) only the task's `git rm`/`git mv` operations (approved in the plan and recorded in Current Progress, §G3.2 TH3; match each `D`/`R` line in the `--name-status` output). Other staged content (a line with a character in the first column other than space and `?`, e.g. `M  src/auth.js`) that is not a TH3 operation of the task → the AI determines which part belongs to the task and which is out of scope (view `git diff --cached` if needed), and **does not guide a commit** until the User deals with it (e.g. commit that part separately first, or unstage it per §X3 after the User agrees).
 
-*Step 2 — Stage exactly the task's files, commit, and record the hash* (one command block; since `git add` names each file explicitly and staging was confirmed legitimate in step 1, staging after add contains exactly the task's files and operations):
+
+*Step 2 — Stage exactly the task's files and verify the staged set* (a separate round from committing; never place `git commit` in this command block):
+
 ```bash
 git add {{file-with-content-change-1}} {{file-with-content-change-2}}
 git diff --cached --name-status
+```
+
+If a task consists only of deletes/renames, with no file left to add → drop the `git add` line but still run `git diff --cached --name-status`.
+
+**Mandatory pause:** after running this block, the AI waits for the User's verbatim output before issuing any commit command. The AI compares the complete staged set against exactly the task's files and any legitimate `git rm`/`git mv` operations accepted in step 1. If any unexpected or missing file appears → stop; request `git diff --cached` and resolve the discrepancy before committing. Do not automatically unstage anything; follow §X3 and §P2 where applicable.
+
+**Rules for the `git add` line:** list only files with unstaged content changes (including newly created files, `??` lines; a file renamed with `git mv` and then edited further uses the **new path**). **Do not** `git add` paths deleted, or old paths of files renamed, by `git rm`/`git mv`: those operations are already staged, and adding them again errors with `pathspec did not match`.
+
+The `git diff --cached --name-status` output after staging is the evidence used to verify the complete staged set. The AI must explicitly confirm that the staged set matches the task before proceeding.
+
+The `git diff` output from §G4.2 must be fresh (nothing changed since); if more edits happened → rerun `git diff {{file}}` for the files about to be added before guiding the staging command.
+
+*Step 3 — Commit and record the hash* (only after the AI has reviewed and confirmed the staged set from step 2):
+
+```bash
 git commit -m "feat({{TASK-ID}}): {{short description}}"
 git status --short
 git rev-parse --short HEAD
 ```
-Rules for the `git add` line: list only files with unstaged content changes (including newly created files, `??` lines; a file renamed with `git mv` and then edited further uses the **new path**). **Do not** `git add` paths deleted, or old paths of files renamed, by `git rm`/`git mv`: those operations are already staged, and adding them again errors with `pathspec did not match`. A task consisting only of deletes/renames, with no file left to add → drop the `git add` line. The `git diff --cached --name-status` line (after add) lets the AI and User match the `A`/`M`/`D`/`R` list against exactly the task's files. The `git diff` output from §G4.2 must be fresh (nothing changed since); if more edits happened → rerun `git diff {{file}}` for the files about to be added before guiding the commit.
 
 If a file in the task still has out-of-scope changes mixed in (found at §G1.3 or §G4.2) → do not use this combined block; handle the mixed part first, then commit, with the AI guiding step by step.
 
-User skipped testing (L8 path b): use the full commit command below instead of the `git commit` line in step 2. One line so it runs on any OS/terminal; the second `-m` adds to the commit message and does not replace the main one:
+User skipped testing (L8 path b): use the full commit command below instead of the `git commit` line in step 3. One line so it runs on any OS/terminal; the second `-m` adds to the commit message and does not replace the main one:
 ```bash
 git commit -m "feat({{TASK-ID}}): {{short description}}" -m "Verified: none (User confirmed)"
 ```
 
-**Ending turn 5a and confirming the hash (sole definition of the hash rule; §T3 and §G5.2 only point here):** ask the User to send the verbatim output of the command block. The AI confirms:
+**Ending turn 5a and confirming the hash (sole definition of the hash rule; §T3 and §G5.2 only point here):**
+- After step 1 (if not skipped) and step 2, the AI waits for and reviews the real output before issuing the next command block. The AI must not issue the commit command in the same reply that first provides the staging commands.
+- Only after the staged set is confirmed valid does the AI provide the step 3 commit commands and ask the User to send their verbatim output.
+- The AI confirms the commit and hash using the step 3 output:
 1. **Commit created:** the `git commit` output has a first line like `[…]` whose bracket content **ends with the hash** (e.g. `[main abc1234] …`, `[main (root-commit) abc1234] …`, `[detached HEAD abc1234] …`).
 2. **Source for State:** `HEAD Commit` comes from the `git rev-parse --short HEAD` output.
 3. **Both hashes must match by prefix** (one is a prefix of the other, since abbreviation lengths can differ).
@@ -329,15 +348,15 @@ Confirmation line in (1) missing, or the hashes do not match → **stop the sync
 6. Output the State in a separate block, only after the User has sent the turn 5a output (hash confirmed per §G5.1) and, if the task had turn 5m, the final output of that turn (§G5.3). Remind the User to check the protocol repo is clean (`git status --short`) before pasting; after pasting and passing §S2.1, commit the protocol file per §T3.
 
 **G5.3 Merge & branch cleanup (turn 5m):** applies when a `MEDIUM`/`LARGE` task was done on a task branch (§X7 `MEDIUM_UP`). This turn sits between turns 5a and 5b and falls under the §G4.3 confirmation (no re-asking per standard operation). By default it has three rounds, each stopping for real output: switch to the target branch → merge → clean up and get the final Git state.
-1. **Default: merge.** After the whole task has passed the Verification Gate and been committed successfully (hash confirmed per §G5.1), the AI guides the User to merge the task branch into Main Git Branch (ST-1; `UNKNOWN` → ask the User). The User may ask to keep the branch instead of merging: then **skip round 1, round 2 and the branch deletion, but not the Git state confirmation**: the AI still requests the three commands in step 5, and that output is the final output of turn 5m. Also add an entry to ST-4 reminding to merge that branch later (ID per §G1.1), since the task was removed from ST-3.
-2. **Pre-merge checks.** Determine the source branch (the branch in the `[…]` line of the turn 5a `git commit` output, or `git branch --show-current` if that output is no longer fresh) and the target branch (Main Git Branch). Working Tree: use the turn 5a `git status --short` output if fresh, otherwise ask to rerun. Uncommitted out-of-scope changes → stop and handle first (§G1.3 item 5, §E1). Use a plain merge, no `--squash`/rebase, to keep checkpoint commits (§X6).
+1. **Default: merge.** After the whole task has passed the Verification Gate and been committed successfully (hash confirmed per §G5.1), the AI guides the User to merge the task branch into its recorded Base Branch (ST-3, §X7). If Base Branch is missing or cannot be verified, stop and ask the User; never assume Main Git Branch. The User may ask to keep the branch instead of merging: then **skip round 1, round 2 and the branch deletion, but not the Git state confirmation**: the AI still requests the three commands in step 5, and that output is the final output of turn 5m. Also add an entry to ST-4 reminding to merge that branch later (ID per §G1.1), since the task was removed from ST-3.
+2. **Pre-merge checks.** Determine the source branch (the branch in the `[…]` line of the turn 5a `git commit` output, or `git branch --show-current` if that output is no longer fresh) and the target branch (the task's recorded Base Branch in ST-3, per §X7). Working Tree: use the turn 5a `git status --short` output if fresh, otherwise ask to rerun. Uncommitted out-of-scope changes → stop and handle first (§G1.3 item 5, §E1). Use a plain merge, no `--squash`/rebase, to keep checkpoint commits (§X6).
 
    **Round 1: only switch to the target branch** (no merge yet):
 ```bash
-git switch {{main-branch}}
+git switch {{target-branch}}
 git branch --show-current
 ```
-   Only when the `git branch --show-current` output equals `{{main-branch}}` go to round 2. `git switch` fails → stop, fix the cause, **do not** run `git merge`. Never chain `git switch` and `git merge` in one block: the later command still runs when the earlier one fails and may merge into the wrong branch (do not use `&&` either, since it does not run on every terminal).
+   Only when the `git branch --show-current` output equals `{{target-branch}}` go to round 2. `git switch` fails → stop, fix the cause, **do not** run `git merge`. Never chain `git switch` and `git merge` in one block: the later command still runs when the earlier one fails and may merge into the wrong branch (do not use `&&` either, since it does not run on every terminal).
 
    **Round 2: merge:**
 ```bash
@@ -376,6 +395,7 @@ git status --short
 
 ## §X — GIT & DATA SAFETY
 - **X1. Principle:** Git is **mandatory** and the **only** mechanism for versioning and recovery during work; no other manual backup (`.bak`, folder copies…). Local Git is version management, **not a backup against losing the machine/disk**: a remote backup (if any) is the User's own business outside this protocol; the AI only suggests considering it and never guides push or remote operations itself. No repo → ask the User's consent, then guide `git init` (§S3.3). Always guide the User through the protocol's full Git flow: check Working Tree/diff (§G1.3, §G4.2), branches (§G1.3, §X7), check staging and commit (§G5.1). `git add` always names each file explicitly; `git add .` / `git add -A` are forbidden. Never ask for passwords/tokens/keys.
+- **Command-block stop rule:** Never place a command after an operation whose output must be inspected or whose success must be verified before proceeding. End the command block at that checkpoint, request the User's verbatim output, inspect it, and only then provide the next command block. Multiple commands may share one block only when no intermediate User/AI review or decision is required and subsequent commands remain safe regardless of earlier output.
 - **X2. Naming:** branch `task-{{id}}-{{short-description}}`. Commit `{{feat|fix|refactor|docs|chore|test}}({{TASK-ID}}): {{description}}`; checkpoint and milestone commits use the same form with description `step n/N - …` or `milestone X/Y - …` (§G5.1).
 - **X3. Selective rollback** (state clearly what will be lost, suggest `git stash` if needed (add `-u` when untracked files must be kept, per §E1), wait for the User's agreement). A `MEDIUM`/`LARGE` task with checkpoint commits: rollback loses only what is after the latest checkpoint:
   - Preview: `git diff {{file}}`
@@ -397,7 +417,18 @@ git status --short
 | PROJECT_STATE | Holds current project state | Update; delete the finished task (§G5.2) |
 
 - **X7. Branching** (Workflow Settings in ST-1; sole definition):
-  - `MEDIUM_UP` (default): `MEDIUM`/`LARGE` tasks run on a branch `task-…` (§G1.3) and go through turn 5m; `SMALL` tasks commit directly on the current branch, including the main branch (choosing this setting is already the User's consent; the AI does not ask per task). A `SMALL` task escalated to `MEDIUM` mid-way → `git switch -c task-…` in place (uncommitted changes come along to the new branch).
+  - `MEDIUM_UP` (default):
+    - `MEDIUM`/`LARGE` tasks run on a dedicated `task-…` branch (§G1.3) and go through turn 5m.
+    - **Resolve the base branch before creating a new task branch:**
+      1. Check the current branch using `git branch --show-current` and compare it with `Main Git Branch` in ST-1.
+      2. If they match → use the current branch as the base; no additional approval needed.
+      3. If they differ → do not create the task branch yet. Ask the User whether to use the current branch or switch to `Main Git Branch` first. Suggest `Main Git Branch` by default, but respect the User's choice.
+      4. If the User chooses `Main Git Branch` → guide `git switch {{main-branch}}`, wait for the real output, verify using `git branch --show-current`, then create the task branch in a separate turn.
+      5. If the User chooses the current branch → create the task branch from the current branch.
+    - **Record the base branch:** after creating the task branch, record `Base Branch: {{branch-name}}` in the task's `Current Progress` or `Technical Notes` in ST-3. This is the default merge target for this task under §G5.3.
+    - **Merge target:** a task branch must be merged back into its recorded Base Branch by default, not automatically into `Main Git Branch`. If the User wants a different integration target, clarify the consequences and obtain approval before changing the target.
+    - `SMALL` tasks commit directly on the current branch, including the main branch (choosing this setting is already the User's consent; the AI does not ask per task).
+    - A `SMALL` task escalated to `MEDIUM` mid-way → resolve the base branch using the same rules above, then guide `git switch -c task-…` from the approved base. Uncommitted changes come along to the new branch.
   - `NONE`: every task commits on the current branch; no task branches, no turn 5m; §E1(b) uses `git stash`; §E2 cancel uses §X3 (`git restore`/`git revert`).
   - A task that did not run on its own branch has no turn 5m; its final Git state = the turn 5a output.
 
@@ -413,6 +444,21 @@ git status --short
 - **E7. Session close with a task open:** propose proactively when the chat is long or the User wants to rest; request `git status --short` (no output yet → record `UNVERIFIED` per §T5) and output State. Unsynced SMALL tasks remain (§C3) → include the merged S-3. In ST-3: keep the real Status (`ANALYZING`/`CODING`/`TESTING`), update Source Snapshot, mark done steps/milestones (with hash if any), the pending step, and the current strike counter if any (`Strike k/2 — error: {{short description}}`).
   - **Code-in-State exception (the only one):** a patch already given but not yet applied → store it in Current Progress with one convention for every Patch Mode: label `INSERT ABOVE {{anchor}}:` or `FIND:` / `REPLACE WITH:` (range REPLACE: `RANGE A:` / `RANGE B:` / `LINES N:` / `REPLACE WITH:`), code indented 4 spaces, no triple backticks, no SEARCH/REPLACE markers. The next session re-issues it per the current Patch Mode. Delete it from State as soon as that step is committed.
 - **E8. Drift Detection:** when file/function names in code differ from State, odd commits exist, Source Snapshot is `DIRTY`/`UNVERIFIED`, the §S2.3 cross-check differs from Source Snapshot, **an anchor is missing/duplicated/moved versus the Anchor Registry**, or **`Provider Contract Version` in group `Consumed Contract` differs from the provider's current version** (§K5): (1) stop writing code; (2) point out the drift; (3) request evidence **matching the drift's cause** (below); (4) propose updating the drifted part of State (or re-adding the anchor) before continuing.
+  - **Exception — continuation of the currently open task on its task branch:**
+    - **Applicability:** applies only when (1) ST-3 contains an open task `TASK-ID`; (2) Workflow Settings has `Branching: MEDIUM_UP`; and (3) the current branch name starts with `task-{{TASK-ID}}-` for that exact open task. A matching branch name alone is not sufficient.
+    - **Verification:** before classifying the mismatch as drift, request:
+      ```bash
+      git merge-base --is-ancestor {{State HEAD Commit}} HEAD
+      git log --oneline {{State HEAD Commit}}..HEAD
+      ```
+      The first command must exit with code `0`, confirming that the State's recorded HEAD is an ancestor of the current HEAD. The second lists commits added since that recorded HEAD.
+    - **Acceptance conditions:** treat the mismatch as a valid continuation, not drift, only when:
+      1. The current branch matches the open task's TASK-ID.
+      2. The State's recorded HEAD is an ancestor of the current HEAD.
+      3. Every commit listed in the log belongs to the same TASK-ID, consistent with the checkpoint commit convention in §G5.1.
+      4. Any uncommitted or untracked changes belong to the open task's approved scope, verified using `git status --short` and, when changes exist, `git diff` / `git diff --cached`.
+    - **Handling:** when all conditions pass, use the actual Git output as the current Source Snapshot for this session; do not classify the branch/HEAD mismatch or task-scoped uncommitted changes as drift. Keep the existing task in ST-3 and continue from its recorded progress. Do not allocate a new TASK-ID. Update Source Snapshot at the next State sync per §E7 or §G5.2; no separate State update is required for each checkpoint.
+    - **Failure to verify:** any failed condition, unexpected commit, out-of-scope change, or inability to establish the branch's origin → follow normal Drift Detection. Ask the User to clarify before writing code.
   - **Evidence by cause:** cause known → request only that evidence; unknown → start with `git status --short`, then widen step by step.
     - `DIRTY`/`UNVERIFIED`: `git status --short`, `git diff` (and `git diff --cached` if staged). No history needed.
     - File/function names in code differ from State: real code (file or top-level name list) and `git status --short`; origin still unclear → add `git log` filtered by file, within §G1.3 limits.
@@ -639,16 +685,25 @@ REPLACE: the `SEARCH` block holds the whole actual code to replace or delete (sa
 
 **F4. Illustrative examples** (shown in English; render in Vietnamese per L11). **All values are placeholders: never copy them into State or commands (§T4).**
 
+
 Turn 5a:
 ````text
 [Phase 5a – Commit] TASK-000
-Staging is empty (legitimate). Run this in the project repo and send me the full output:
+
+Round 1 — Stage and inspect:
+Staging is empty (legitimate). Run in the project repo:
   git add src/a.js src/b.js
   git diff --cached --name-status
+
+Stop and send me the full output. I verify that the staged set contains exactly the task's files. Do not run git commit yet.
+
+Round 2 — Commit:
+Only after I confirm the staged set, run:
   git commit -m "feat(TASK-000): add X"
   git status --short
   git rev-parse --short HEAD
-After your output I confirm that the hash in the `[branch 0000000]` line is a prefix-match of the rev-parse output; otherwise I stop (§G5.1). I do not update State yet.
+
+Send me the full output. I confirm that the hash in the `[branch 0000000]` line is a prefix-match of the rev-parse output; otherwise I stop (§G5.1). I do not update State yet.
 ````
 
 Turn 5b:
