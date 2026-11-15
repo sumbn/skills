@@ -31,7 +31,7 @@ Văn bản này là **KHUNG LUẬN CỨ DÙNG CHUNG (MASTER ARGUMENT SCHEMA & ST
 
 **Quan hệ với Hồ sơ vụ việc:**
 
-- Hồ sơ vụ việc là nguồn dữ kiện duy nhất. File này không phải nơi lưu dữ kiện gốc: chỉ tóm tắt dữ kiện (tối đa 2 câu; riêng dữ kiện bất lợi xem D.2) kèm mã tài liệu và số trang chép đúng từ hồ sơ. Khi hai file khác nhau về dữ kiện, Hồ sơ vụ việc là chuẩn.
+- Hồ sơ vụ việc là nguồn dữ kiện gốc và là chuẩn đối chiếu. File này không phải nơi lưu dữ kiện gốc: dữ kiện lấy từ Hồ sơ chỉ được tóm tắt (tối đa 2 câu; riêng dữ kiện bất lợi xem D.2), kèm mã tài liệu và số trang chép đúng từ hồ sơ. Ngoại lệ: thông tin cụ thể về sự việc do người dùng cung cấp theo B.2(1), C.3 được ghi riêng với nguồn `[Người dùng cung cấp, dd/mm/yyyy]`, không cấp mã tài liệu và không coi là dữ kiện đã được xác minh. Khi hai file khác nhau về dữ kiện, Hồ sơ vụ việc là chuẩn; thông tin người dùng cung cấp trực tiếp không được dùng để tự sửa hoặc thay thế dữ kiện trong Hồ sơ.
 - Ký hiệu: khi nhắc mục của Hồ sơ vụ việc luôn ghi tiền tố "Hồ sơ" (VD: "Hồ sơ 3.B", "Hồ sơ MỤC 1"); mục không có tiền tố là của file này. Mã tài liệu `[ND-xx]`, `[BD-xx]`, `[NLQ-xx]`, `[CQNN-xx]`, `[CQDT-xx]`, `[VKS-xx]`, `[TA-xx]`, `[GD-xx]`, `[KHAC-xx]` và mã TODO `[TD-xx]` là mã của Hồ sơ vụ việc; khi nhắc TODO của hồ sơ ghi `[TD-xx hồ sơ]`.
 - Khi người dùng yêu cầu soạn luận cứ, bản bào chữa, bản bảo vệ quyền lợi, kiến nghị: dùng quy trình của file này thay cho Kịch bản 4 của Hồ sơ vụ việc. Mọi thao tác trên Hồ sơ vụ việc vẫn theo quy tắc của hồ sơ đó.
 - Khi Hồ sơ vụ việc thay đổi, file này không tự thay đổi theo (xem Kịch bản 3).
@@ -129,7 +129,7 @@ Văn bản này là **KHUNG LUẬN CỨ DÙNG CHUNG (MASTER ARGUMENT SCHEMA & ST
 2. **Ý chính do người dùng nêu:** ghi là ý chính của người dùng kèm ngày (theo C.6); AI đối chiếu với hồ sơ, tìm dữ kiện hỗ trợ và dữ kiện bất lợi, không tự "nâng" ý chính thành dữ kiện.
    - Nếu ý chính do người dùng nêu chứa khẳng định về sự việc mà hồ sơ chưa có, phân biệt theo nội dung người dùng nêu (không theo cách diễn đạt): (1) người dùng cung cấp thông tin về sự việc, tức nêu được ít nhất một sự kiện cụ thể như chủ thể làm gì, mốc thời gian, số liệu hoặc tài liệu (VD: "thân chủ đã nộp [số tiền] cho bị hại ngày [ngày-1]"): ghi thông tin đó ở "Dữ kiện hỗ trợ" với nhãn bản chất `[Thông tin do người dùng cung cấp]` kèm nhãn tác động theo hệ quy chiếu ở MỤC 1, nguồn `[Người dùng cung cấp, dd/mm/yyyy]` thay cho mã tài liệu (C.3); mức của ý chính dựa vào thông tin đó là `[Chỉ có lời trình bày]` (A.5), kèm TDL nhóm `[Củng cố dữ kiện]` để tìm tài liệu chứng minh; nếu thông tin là lời của thân chủ hoặc chủ thể khác do người dùng thuật lại thì dùng bullet kế tiếp (nhãn `[Lời trình bày]`); (2) người dùng chỉ nêu luận điểm, kết luận, nhận định hoặc hướng cần chứng minh mà không kèm sự kiện cụ thể nào (VD: "thân chủ đã tích cực khắc phục hậu quả", "cần chứng minh thân chủ không có lỗi"): giữ nguyên như điều cần chứng minh, không ghi vào "Dữ kiện hỗ trợ", mức của ý chính là `[Chưa có dữ kiện trong hồ sơ]`, kèm TDL nhóm `[Làm việc với thân chủ]` hoặc `[Củng cố dữ kiện]` để làm rõ nội dung, cách thức, thời điểm. Một câu có cả hai phần thì tách thành các ý chính Yn riêng. Không chắc câu thuộc loại nào thì xếp vào (2), nêu giả định ở ghi chú cuối và không suy ra tình tiết cụ thể từ một nhận định (Quy tắc 5).
    - Nếu người dùng thuật lại lời của thân chủ hoặc chủ thể khác: giữ bản chất `[Lời trình bày]`, ghi rõ chủ thể, nguồn `[Người dùng cung cấp, dd/mm/yyyy]`.
-     - Khi AI tự đề xuất luận điểm: chỉ đề xuất luận điểm có ít nhất một dữ kiện hỗ trợ trong hồ sơ. Hướng chưa có dữ kiện thì không lập thẻ, chỉ nêu thành TDL. Ngoại lệ duy nhất: luận điểm "đặt vấn đề về nguồn" theo bullet kế tiếp.
+     - Khi AI tự đề xuất luận điểm: chỉ đề xuất khi có ít nhất một dữ kiện hỗ trợ trong Hồ sơ vụ việc hoặc thông tin cụ thể về sự việc do người dùng cung cấp theo B.2(1). Nếu chỉ có thông tin người dùng cung cấp, luận điểm phải ở trạng thái `[Đề xuất]`, ý chính giữ mức `[Chỉ có lời trình bày]`, dẫn đúng nguồn và kèm TDL củng cố dữ kiện; không được trình bày như sự việc đã được xác minh. Hướng chưa có bất kỳ dữ kiện nền nào thì không tự lập luận điểm, chỉ nêu thành TDL. Ngoại lệ riêng: luận điểm "đặt vấn đề về nguồn" theo bullet kế tiếp.
    - **Luận điểm "đặt vấn đề về nguồn" (nhằm vào dữ kiện của phía đối lập):** AI được tự đề xuất khi thấy đủ hai điều kiện mô tả sau trong Hồ sơ: (1) với một yếu tố mà phía đối lập dựa vào, dữ kiện của phía đó theo nhãn bản chất của Hồ sơ hiện chỉ là `[Lời trình bày]` của một chủ thể hoặc một phía; yếu tố chỉ lấy từ Hồ sơ MỤC 1 (luận điểm của phía đối lập, Danh mục vấn đề) hoặc do người dùng nêu, AI không tự xác định các yếu tố theo quy định pháp luật; (2) trong các tài liệu đã nạp chưa thấy tài liệu đối chiếu cho yếu tố đó. Điều kiện kích hoạt chỉ dựa trên nhãn nguồn và phạm vi tài liệu đã nạp. AI không đánh giá nguồn đó đủ hay chưa đủ để chứng minh: mức chứng minh cần thiết phụ thuộc quy định pháp luật, loại tranh chấp và vấn đề cụ thể, thuộc về người dùng (B.4). Quy tắc:
      - Tách thành hai ý chính. Y1 mô tả loại nguồn hiện có của phía đối lập, kèm mã tài liệu và số trang; dữ kiện này giữ nhãn gốc (thường là `Bất lợi`) và đặt ở "Dữ kiện bất lợi đối ứng". Y2 là nhận xét về phạm vi tài liệu đã nạp ("chưa thấy …"), mức `[Chưa có dữ kiện trong hồ sơ]` kèm ghi chú `(nhận xét về phạm vi tài liệu đã nạp)` theo A.5. Dòng "Dữ kiện hỗ trợ" ghi `Không có trong Hồ sơ đã nạp`, trừ khi hồ sơ có dữ kiện khác (VD: `[Ghi nhận sự khác biệt | Có lợi]`).
      - Luôn kèm một TDL nhóm `[Rà soát toàn hồ sơ]` (dẫn `[TD-xx hồ sơ]` nếu đã có) để xác nhận trên toàn bộ hồ sơ gốc trước khi khẳng định ở văn bản nộp.
@@ -562,7 +562,7 @@ _(AI tự kiểm thầm trước mỗi câu trả lời; không in checklist ra 
 
 **MỤC 3.1 (Vấn đề: Diễn biến hành vi và vai trò của Bị can):**
 
-- **[LD-VD1] [Sự kiện/Hành vi] [Chính]** Luận điểm: Hành vi của [Bị can A] chỉ là đẩy bị hại, không sử dụng hung khí.
+- **[LD-VD1] [Sự kiện/Hành vi] [Chưa chốt vai trò]** Luận điểm: Hành vi của [Bị can A] chỉ là đẩy bị hại, không sử dụng hung khí.
   - **Nguồn ý chính:** [Người dùng nêu, dd/mm/yyyy]
   - **Ý chính:**
     - Y1: Điểm tựa là lời khai của [Bị can A] về việc không cầm hung khí.
@@ -644,7 +644,7 @@ _(Ghi chú cuối: "Thông tin về việc khắc phục hậu quả chưa có t
 
 _(Người dùng nêu: "Thân chủ đã nộp [số tiền] cho bị hại vào ngày [ngày-1]." Câu này nêu sự kiện cụ thể (ai làm gì, khi nào, bao nhiêu) nên là thông tin về sự việc có nguồn là người dùng, chưa được xác minh. Hồ sơ chưa có tài liệu về việc này.)_
 
-- **[LĐ-VD5] [Tình tiết] [Chưa chốt vai trò]** Luận điểm: Việc [Bị can A] nộp [số tiền] cho bị hại cần được xem xét là khắc phục hậu quả.
+- **[LD-VD5] [Tình tiết] [Chưa chốt vai trò]** Luận điểm: Việc [Bị can A] nộp [số tiền] cho bị hại cần được xem xét là khắc phục hậu quả.
   - **Nguồn ý chính:** [Người dùng nêu, dd/mm/yyyy]
   - **Ý chính:**
     - Y1: [Bị can A] đã nộp [số tiền] cho bị hại vào ngày [ngày-1].
@@ -662,7 +662,7 @@ _(Người dùng nêu: "Thân chủ đã nộp [số tiền] cho bị hại vào
 
 **MỤC 6:**
 
-- [ ] **[TDL-VD5] [Củng cố dữ kiện]** (Ưu tiên: Cao) Thu thập chứng từ nộp tiền (biên lai, sao kê, xác nhận của bị hại) để có tài liệu chứng minh Y1. (Liên quan: LĐ-VD5)
+- [ ] **[TDL-VD5] [Củng cố dữ kiện]** (Ưu tiên: Cao) Thu thập chứng từ nộp tiền (biên lai, sao kê, xác nhận của bị hại) để có tài liệu chứng minh Y1. (Liên quan: LD-VD5)
 
 _(Ghi chú cuối: "Thông tin về việc nộp tiền do người dùng cung cấp, hồ sơ chưa có; nên đưa vào Hồ sơ vụ việc khi có chứng từ (C.3). Y1 hiện chỉ có thông tin do người dùng cung cấp.")_
 
