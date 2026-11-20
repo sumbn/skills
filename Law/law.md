@@ -550,3 +550,134 @@ Chỉ áp dụng module chuyên ngành phù hợp với Loại vụ việc ở M
 
 ### DM5 — Hành chính
 - Quyết định/hành vi hành chính bị khiếu kiện: thẩm quyền, trình tự ban hành, căn cứ, thời hạn khiếu nại/khởi kiện, quá trình giải quyết khiếu nại.
+
+## NHÓM F — FLOW LÀM VIỆC
+
+Quy ước: mỗi bước một dòng `n. ID — điều kiện/ghi chú`. Khi một flow gọi hoặc chạy tiếp flow khác, bỏ S0, S7, S8 của flow được gọi; các bước này chỉ xuất một lần ở flow gọi.
+
+### F1 — Khởi tạo hồ sơ
+1. IN4 — xác định Bên đang bảo vệ từ thông tin người dùng đã đưa, không hỏi lại chính thông tin đó; chưa xác định → ghi `[Chưa xác định – cần người dùng xác nhận]`, một câu hỏi ở ghi chú cuối (IN5)
+2. S0 — từ đây xuất theo khuôn snippet
+3. S1 — MỤC 1 đầy đủ trường
+4. S1b — đồng bộ tiêu đề 3.1–3.3 với Danh mục vừa tạo
+5. IN2 — MỤC 1 vừa xuất là hệ quy chiếu cho các bước dưới trong cùng lượt
+6. DM0 — chọn module chuyên ngành theo Loại vụ việc vừa xác lập
+7. F2 — nếu đầu vào là tài liệu cụ thể → chạy từ bước CD1 (bỏ IN2–IN4, đã làm ở trên)
+8. F7 — nếu đầu vào là tóm tắt hoặc mục tiêu bảo vệ có dữ kiện cụ thể
+9. S6c — nếu Danh mục có hơn 3 vấn đề → tiểu mục cho vấn đề từ thứ 4 trở đi (theo S1b), đặt sau các dòng dữ kiện
+10. S7 — ghi chú cuối
+11. S8 — cảnh báo bắt buộc
+
+### F2 — Nạp tài liệu mới
+1. IN2 — lấy trạng thái hiện hành làm cơ sở: MỤC 1 để gán tác động; MỤC 5 và các mã đã cấp để đánh số
+2. IN3 — trùng → báo trùng ở ghi chú cuối và kết thúc flow; phần chưa xử lý của tài liệu xử lý theo đợt không phải trùng
+3. IN4 — chưa có hồ sơ nền hoặc chưa xác định được Bên đang bảo vệ → hỏi theo IN5 rồi dừng; người dùng yêu cầu làm trước → tiếp tục với `[Chưa phân loại]`
+4. CD1 — ranh giới văn bản trong PDF ghép không rõ → hỏi theo IN5 rồi dừng
+5. CD2 — không xác định được chủ thể lập → hỏi theo IN5 rồi dừng; chủ thể không thuộc 8 nhóm đầu → `KHAC`, không hỏi
+6. IN6 — tài liệu dài hoặc nhiều tài liệu: chốt dải trang xử lý trong lượt này
+7. CD3 — cấp số mã tài liệu; tiếp tục tài liệu xử lý theo đợt thì dùng lại mã đã cấp
+8. CT1 — kiểm tra hình ảnh gốc trước khi trích dẫn
+9. CT4 — tài liệu lỗi; chữ/số nhiều cách đọc
+10. DM0 — DM1 + module chuyên ngành theo Loại vụ việc ở MỤC 1
+11. EX1 — trích xuất theo phạm vi MỤC 1
+12. EX2 — quét dữ kiện bất lợi
+13. EX3 — gán tác động; chưa xác định Bên đang bảo vệ → `[Chưa phân loại]` (IN4)
+14. RT8 — không có dữ kiện nào thuộc Danh mục (đã rà ở EX2) → chỉ chạy S0, RT7, S5, S7, S8
+15. EX4 — nhãn bản chất; lời khai viết theo "Chủ thể X khai rằng…"
+16. EX5 — nếu cùng một chủ thể có nhiều lần trình bày
+17. EX6 — đối chiếu với dòng đã có
+18. EX7 — loại mốc thời gian
+19. EX8 — nếu tài liệu nêu căn cứ pháp lý, thời hạn, thời hiệu
+20. CT2 — nguồn và số trang cho từng dữ kiện
+21. CT5 — nếu cần trích nguyên văn
+22. UP2 — nếu tài liệu sửa đổi, thay thế hoặc đính chính tài liệu trước
+23. RT1 — dữ kiện vào MỤC 2 và/hoặc MỤC 3
+24. RT2 — dữ kiện bất lợi → 3.B kèm dòng tham chiếu
+25. RT3 — chọn tiểu mục 3.x; dữ kiện ngoài Danh mục → vấn đề mới
+26. RT4 — áp dụng khi soạn các dòng MỤC 2, 3, 5
+27. RT5 — vị trí chèn trong MỤC 2
+28. S0 — chỉ xuất mảnh dữ liệu mới, mỗi vị trí chèn một dòng chỉ dẫn + một khối code
+29. S2 — dòng MỤC 2
+30. S3 — dòng MỤC 3
+31. RT6 — TODO phát sinh từ CT1, CT4, EX6, EX8 và lỗ hổng chứng cứ
+32. S4 — dòng TODO
+33. RT7 — dòng danh mục MỤC 5
+34. S5 — dòng tài liệu; không xuất lại khi chỉ tiếp tục tài liệu xử lý theo đợt (IN6)
+35. S6c — nếu RT3 tạo vấn đề mới
+36. S6d — đề xuất bổ sung Danh mục, đi kèm S6c
+37. S7 — ghi chú cuối
+38. S8 — cảnh báo bắt buộc
+
+### F3 — Báo xong TODO / đính chính dữ liệu cũ
+1. IN2 — trạng thái hiện hành; định vị TODO hoặc dòng cũ người dùng nói tới (theo mã `[TD-xx]` hoặc vài chữ đầu); không định vị được → nêu giả định ở ghi chú cuối (IN5)
+2. UP3 — nếu báo xong TODO: xét điều kiện đóng; chưa đủ điều kiện → giữ nguyên TODO, nêu lý do ở ghi chú cuối, không xuất S6b
+3. S0 — từ đây xuất theo khuôn snippet
+4. F2 — nếu kèm tài liệu chứng minh: xử lý như tài liệu mới
+5. F7 — nếu hoàn thành bằng trao đổi trực tiếp, hoặc người dùng thuật kết quả có nội dung dữ kiện (kể cả bất lợi: R3)
+6. S6b — đóng TODO đủ điều kiện; biến thể nguồn theo cách hoàn thành (tài liệu / người dùng cung cấp / người dùng xác nhận không cần tài liệu)
+7. UP1 — nếu yêu cầu đính chính dữ liệu cũ: xét ba trường hợp; không thuộc → giữ nguyên dòng cũ (R6), nội dung mới mâu thuẫn thì ghi nhận bằng EX6 (qua F7)
+8. S6a — nếu UP1 đạt: dòng thay thế kèm cờ đính chính
+9. S7 — ghi chú cuối
+10. S8 — cảnh báo bắt buộc
+
+### F4 — Hỏi đáp, phân tích, soạn thảo
+1. IN2 — dựa trên trạng thái hiện hành của hồ sơ
+2. WR1 — nếu hỏi đáp, phân tích hoặc tóm tắt
+3. WR2 — nếu soạn thảo (đơn, bản luận cứ, kế hoạch hỏi…)
+4. CT2 — dẫn nguồn cho mọi dữ kiện nêu trong câu trả lời (thông tin do người dùng nêu → CT3)
+5. CT5 — nếu trích nguyên văn
+6. EX6 — nếu phân tích chạm mâu thuẫn giữa các dữ kiện
+7. EX8 — nếu chạm căn cứ pháp lý, thời hạn, thời hiệu
+8. S0 — chỉ khi có snippet kèm theo; xuất sau phần trả lời
+9. F7 — nếu câu hỏi kèm thông tin mới cần lưu vào hồ sơ
+10. RT6 — nếu câu trả lời làm phát sinh việc cần xác minh hoặc thu thập
+11. S4 — dòng TODO
+12. S7 — ghi chú cuối cho phần snippet; phần trả lời không bị giới hạn 3 dòng (WR1)
+13. S8 — cảnh báo phát sinh
+
+### F5 — Người dùng dán lại file hoặc xác nhận đã chèn
+1. IN2 — bản dán lại hoặc xác nhận chèn trở thành trạng thái hiện hành mới
+2. UP6 — đối chiếu với các snippet đã đề xuất; báo snippet chưa thấy, neo mất/sửa, mã trùng, MỤC 1 khác bản đề xuất; không tự chèn lại
+3. UP4 — nếu thay đổi Danh mục vấn đề đã được chèn vào MỤC 1 → đồng bộ MỤC 3 (ngoại lệ của câu "không xuất snippet mới" ở UP6)
+4. S0 — chỉ khi có snippet ở bước trên hoặc ở flow chạy tiếp
+5. S1b — nếu UP4 áp dụng: đồng bộ tiêu đề 3.1–3.3 với Danh mục đã cập nhật (vấn đề từ thứ 4 trở đi xuất theo S6c)
+6. IN1 — nếu lượt này còn kèm tài liệu hoặc yêu cầu khác → chạy flow tương ứng trên trạng thái mới; không kèm gì → không xuất snippet mới
+7. S7 — ghi chú cuối
+8. S8 — cảnh báo bắt buộc (neo mất, mã trùng, MỤC 1 chưa xác nhận…)
+
+### F6 — Thay đổi thông tin MỤC 1
+1. IN2 — trạng thái hiện hành của MỤC 1 để định vị chỗ thay hoặc chỗ thêm
+2. S0 — từ đây xuất theo khuôn snippet
+3. S6d — đề xuất dòng/đoạn thay đổi, ghi ĐỀ XUẤT – CHƯA CẬP NHẬT
+4. UP4 — hiệu lực chỉ sau khi người dùng xác nhận đã chèn; thay đổi Danh mục → đồng bộ MỤC 3 ở F5 sau khi xác nhận, không làm ở lượt này
+5. EX8 — nếu thay đổi mốc thời hạn/thời hiệu: chỉ chép mốc người dùng nêu, kèm nguồn (CT3)
+6. RT6 — nếu cần TODO `[Thời hạn]`
+7. S4 — dòng TODO
+8. UP5 — nếu đổi Bên đang bảo vệ: không tự gán lại nhãn cũ; ghi chú cuối nêu nhãn cũ đang tính theo bên cũ
+9. UP1 — nếu người dùng yêu cầu rõ phân loại lại một nhóm dòng sau khi đổi Bên đang bảo vệ (trường hợp iii)
+10. S6a — dòng thay thế cho các dòng được yêu cầu phân loại lại
+11. S7 — ghi chú cuối
+12. S8 — cảnh báo bắt buộc
+
+### F7 — Ghi nhận thông tin do người dùng cung cấp (flow phụ: chỉ do F1, F3, F4 gọi; không chọn qua IN1)
+1. CT3 — ghi nguồn và ngày cho từng thông tin
+2. CD4 — không cấp mã tài liệu; không có dòng MỤC 5
+3. EX1 — trích dữ kiện cụ thể liên quan Danh mục vấn đề ở MỤC 1 hiện hành (IN2)
+4. EX2 — quét dữ kiện bất lợi trong lời người dùng
+5. EX3 — gán tác động; chưa xác định Bên đang bảo vệ → `[Chưa phân loại]` (IN4)
+6. EX4 — nhãn bản chất; người dùng thuật lại lời khai của thân chủ hoặc chủ thể khác → giữ `[Lời trình bày]`
+7. EX5 — nếu cùng một chủ thể có nhiều lần trình bày
+8. EX6 — đối chiếu với dòng đã có
+9. EX7 — mốc theo lời trình bày: ghi chủ thể và nguồn
+10. EX8 — nếu có căn cứ pháp lý, thời hạn, thời hiệu
+11. RT1 — dữ kiện vào MỤC 2 và/hoặc MỤC 3
+12. RT2 — dữ kiện bất lợi → 3.B kèm dòng tham chiếu
+13. RT3 — chọn tiểu mục 3.x; dữ kiện ngoài Danh mục → vấn đề mới
+14. RT4 — áp dụng khi soạn các dòng MỤC 2, 3
+15. RT5 — vị trí chèn trong MỤC 2
+16. S2 — dòng MỤC 2
+17. S3 — dòng MỤC 3
+18. RT6 — TODO thu thập tài liệu xác nhận (CT3)
+19. S4 — dòng TODO
+20. S6c — nếu RT3 tạo vấn đề mới
+21. S6d — đề xuất bổ sung Danh mục, đi kèm S6c
